@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import express, {Request, Response} from 'express';
+import { auth } from 'express-oauth2-jwt-bearer';
 import cors from 'cors';
 import path from 'path';
 import { CitiesData, City, WeatherData } from './types';
@@ -13,9 +14,21 @@ const PORT = process.env.PORT || 5000;
 
 // ensure API key exists before starting service
 if(!process.env.OPENWEATHER_API_KEY) {
-    console.error("OPENWEATHER_API_KEY is not confidured.");
+    console.error("OPENWEATHER_API_KEY is not configured.");
     process.exit(1);
 }
+
+if (!process.env.AUTH0_DOMAIN || !process.env.AUTH0_AUDIENCE) {
+    console.error(
+        "Auth0 env missing."
+    );
+    process.exit(1);
+}
+
+const checkJwt = auth({
+    audience: process.env.AUTH0_AUDIENCE,
+    issuerBaseURL: `https://${process.env.AUTH0_DOMAIN}/`
+});
 
 // Middleware
 app.use(
@@ -42,7 +55,8 @@ try {
     process.exit(1);
 }
 
-console.log("Using real openweathermap API");
+console.log("openweathermap API connected");
+console.log("oauth0 enabled");
 
 // Routes
 app.get("/api/health", (req: Request, res: Response) => {
@@ -50,12 +64,12 @@ app.get("/api/health", (req: Request, res: Response) => {
 });
 
 // get all cities
-app.get("/api/cities", (req: Request, res: Response) => {
+app.get("/api/cities", checkJwt, (req: Request, res: Response) => {
     res.json(cities);
 });
 
 // get weather for all cities
-app.get("/api/weather", async (req: Request, res: Response) => {
+app.get("/api/weather", checkJwt, async (req: Request, res: Response) => {
     try {
         const weatherPromises = cities.map(async (city) => {
             try {
@@ -89,7 +103,7 @@ app.get("/api/weather", async (req: Request, res: Response) => {
 });
 
 // get weather for a specific city
-app.get("/api/weather/:cityId", async (req: Request, res: Response) => {
+app.get("/api/weather/:cityId", checkJwt, async (req: Request, res: Response) => {
     const cityId = parseInt(req.params.cityId, 10);
 
     if (isNaN(cityId)) {

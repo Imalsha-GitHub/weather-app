@@ -1,5 +1,6 @@
 import type { WeatherData } from "../types/weather";
 import { useNavigate } from "react-router-dom";
+import AuthButton from "./AuthButton";
 import { formatDate, formatTime, getWeatherColor, getWeatherIcon, metersToKm } from "../utils/weatherUtils";
 
 interface WeatherDetailProps {
@@ -18,10 +19,13 @@ const WeatherDetail: React.FC<WeatherDetailProps> = ({ weather }) => {
     <div className="min-h-screen p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div className="flex items-center gap-3">
             <span className="text-4xl">🌤️</span>
             <h1 className="text-3xl font-bold text-white">Weather App</h1>
+          </div>
+          <div className="flex justify-start md:justify-end">
+            <AuthButton />
           </div>
         </div>
 
